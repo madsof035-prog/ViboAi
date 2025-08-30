@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+  <head>
+    <meta
+      name="description"
+      content="اكتشف قوة الذكاء الاصطناعي المتقدم مع نسخة جيميني! ✨ استمتع بميزات متطورة وتجربة تفاعل سلسة. جربه الآن! 🤖"
+    />
+    <meta
+      name="keywords"
+      content="نسخة جيميني، ذكاء اصطناعي، شات بوت، تعلم الآلة، تقنية مبتكرة، مساعد، محادثة"
+    />
+    <meta name="author" content="جورانجا داس سامرات" />
+    <meta name="robots" content="index, follow" />
+    <meta name="language" content="ar" />
+
+    <meta property="og:title" content="عنوان نسخة جيميني 🚀" />
+    <meta
+      property="og:description"
+      content="اكتشف قوة الذكاء الاصطناعي المتقدم مع نسخة جيميني! ✨ استمتع بميزات متطورة وتجربة تفاعل سلسة. جربه الآن! 🤖"
+    />
+    <meta
+      property="og:image"
+      content="URL_TO_YOUR_WEBSITE_LOGO_OR_A_REPRESENTATIVE_SCREENSHOT"
+    />
+    <meta
+      property="og:url"
+      content="https://geminiclonebygouranga.netlify.app/"
+    />
+    <meta property="og:type" content="website" />
+
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="عنوان نسخة جيميني 🚀" />
+    <meta
+      name="twitter:description"
+      content="اكتشف قوة الذكاء الاصطناعي المتقدم مع نسخة جيميني! ✨ استمتع بميزات متطورة وتجربة تفاعل سلسة. جربه الآن! 🤖"
+    />
+    <meta
+      name="twitter:image"
+      content="URL_TO_YOUR_WEBSITE_LOGO_OR_A_REPRESENTATIVE_SCREENSHOT"
+    />
+    <meta
+      name="twitter:url"
+      content="https://geminiclonebygouranga.netlify.app/"
+    />
+    <meta name="google-adsense-account" content="ca-pub-8784624020948059" />
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="assets/highlight-js/styles/github-dark.css" />
+    <link href="assets/boxicons-2.1.4/css/boxicons.min.css" rel="stylesheet" />
+    <link rel="stylesheet" href="style.css" />
+    <link rel="shortcut icon" href="assets/gemini.svg" type="image/x-icon" />
+    <script src="assets/highlight-js/highlight.min.js"></script>
+    <script src="assets/marked/marked.min.js"></script>
+    <title>نسخة جوجل جيميني</title>
+  </head>
+
+  <body>
+    <nav class="navbar">
+      <h3 class="navbar__logo">ViloAi</h3>
+      <button class="navbar__button" id="themeToggler">
+        <i class="bx bx-sun"></i>
+      </button>
+    </nav>
+
+    <header class="header">
+      <div class="header__title">
+        <h1>مرحباً بك!</h1>
+        <h2>كيف يمكنني مساعدتك اليوم؟</h2>
+      </div>
+      <div class="suggests">
+        <div class="suggests__item">
+          <p class="suggests__item-text">
+            أعطني نصائح لمساعدة الأطفال على إنهاء واجباتهم في الوقت المحدد
+          </p>
+          <div class="suggests__item-icon">
+            <i class="bx bx-stopwatch"></i>
+          </div>
+        </div>
+        <div class="suggests__item">
+          <p class="suggests__item-text">
+            ساعدني في كتابة رسالة بريد خارج المكتب
+          </p>
+          <div class="suggests__item-icon">
+            <i class="bx bx-edit-alt"></i>
+          </div>
+        </div>
+        <div class="suggests__item">
+          <p class="suggests__item-text">
+            أعطني عبارات لتعلم لغة جديدة
+          </p>
+          <div class="suggests__item-icon">
+            <i class="bx bx-compass"></i>
+          </div>
+        </div>
+        <div class="suggests__item">
+          <p class="suggests__item-text">
+            أرني كيفية صنع شيء بيديك
+          </p>
+          <div class="suggests__item-icon">
+            <i class="bx bx-wrench"></i>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <section class="chats"></section>
+
+    <!-- فقاعة تنبيه خدمة الصور -->
+    <div class="image-service-notification hide" id="imageServiceNotification">
+      <div class="notification-content">
+        <span class="notification-text">خدمة رفع الملفات غير متوفرة حالياً<br>ستكون هنا عما قريب</span>
+        <button class="notification-close" id="closeNotification">
+          <i class="bx bx-x"></i>
+        </button>
+      </div>
+    </div>
+
+    <!-- حاوية خيارات البحث والملفات -->
+    <div class="search-options-container hide" id="searchOptionsContainer">
+      <div class="options-content">
+        <div class="options-buttons">
+          <button class="option-btn camera-btn" id="cameraBtn">
+            <i class="bx bx-camera"></i>
+          </button>
+          <button class="option-btn gallery-btn" id="galleryBtn">
+            <i class="bx bx-image"></i>
+          </button>
+          <button class="option-btn files-btn" id="filesBtn">
+  <i class="bx bx-folder"></i>
+</button>
+        </div>
+        <div class="options-divider"></div>
+        <div class="internet-search-option">
+          <button class="search-option-btn" id="internetSearchBtn">
+            <i class="bx bx-search"></i>
+            <span>بحث في الإنترنت</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- نافذة عرض الصورة بملء الشاشة -->
+    <div class="image-fullscreen-overlay hide" id="imageFullscreenOverlay">
+      <div class="fullscreen-content">
+        <button class="fullscreen-close" id="fullscreenClose">
+          <i class="bx bx-x"></i>
+        </button>
+        <img class="fullscreen-image" id="fullscreenImage" src="" alt="Generated Image">
+        <div class="fullscreen-controls">
+          <button class="fullscreen-download" id="fullscreenDownload">
+            <i class="bx bx-download"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <section class="prompt">
+      <form action="#" class="prompt__form" novalidate>
+        <div class="prompt__input-wrapper">
+          <!-- مستطيل البحث داخل الحقل -->
+          <div class="search-indicator hide" id="searchIndicator">
+            <span>بحث</span>
+            <button type="button" class="search-close" id="searchCloseBtn">
+              <i class="bx bx-x"></i>
+            </button>
+          </div>
+
+          <!-- مربع الإدخال -->
+          <textarea
+            id="userInput"
+            placeholder="اسأل عن أي شيء"
+            class="prompt__form-input"
+            rows="1"
+            required
+          ></textarea>
+
+          <!-- زر الصورة -->
+          <button type="button" class="image-btn" id="imageBtn">
+            <span>
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none"
+                xmlns="http://www.w3.org/2000/svg">
+                <g id="folder-03-solid-standard 1">
+                  <g id="Vector">
+                    <path
+                      d="M3.25 4.15C3.25 3.10066 4.12056 2.25 5.19444 2.25H9.53524C10.1854 2.25 10.7925 2.56749 11.1531 3.09607L12.5203 5.1H17.8333C19.4442 5.1 20.75 6.37599 20.75 7.95V8.2H3.25V4.15Z"
+                      fill="#34322D" />
+                    <path fill-rule="evenodd" clip-rule="evenodd"
+                      d="M3.0301 10.25C1.93259 10.25 1.05811 11.2374 1.28652 12.3473L2.93285 20.3473C3.10368 21.1774 3.84452 21.75 4.67643 21.75H18.5017C19.273 21.75 19.9727 21.2573 20.2039 20.5086L22.6734 12.5086C23.0291 11.3562 22.1353 10.25 20.9712 10.25H3.0301ZM16 16H8V18H16V16Z"
+                      fill="#34322D" />
+                  </g>
+                </g>
+              </svg>
+            </span>
+          </button>
+
+          <!-- زر الإرسال -->
+          <button class="prompt__form-button" id="sendButton">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="12" y1="19" x2="12" y2="5" />
+              <polyline points="5 12 12 5 19 12" />
+            </svg>
+          </button>
+
+          <!-- زر الحذف -->
+          <button class="prompt__form-button" id="deleteButton">
+            <i class="bx bx-trash"></i>
+          </button>
+
+        </div>
+      </form>
+    </section>
+
+    <script
+      async
+      src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8784624020948059"
+      crossorigin="anonymous"
+    ></script>
+
+    <script type="module" src="script.js"></script>
+
+<script>
+  const textarea = document.querySelector('.prompt__form-input');
+
+  textarea.addEventListener('input', function () {
+    // إعادة ضبط الارتفاع عشان الحساب يكون صحيح
+    this.style.height = 'auto';
+
+    // احسب الارتفاع الجديد
+    const maxHeight = parseInt(getComputedStyle(this).lineHeight) * 10; // 10 أسطر
+    const newHeight = this.scrollHeight;
+
+    if (newHeight <= maxHeight) {
+      this.style.height = newHeight + 'px';
+      this.style.overflowY = 'hidden';
+    } else {
+      this.style.height = maxHeight + 'px';
+      this.style.overflowY = 'auto';
+    }
+  });
+</script>
+
+  </body>
+</html>
