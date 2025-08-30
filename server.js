@@ -1,9 +1,9 @@
 const express = require("express");
 const cors = require("cors");
-const path = require("path");
 require("dotenv").config();
-const config = require("./config.js");
+const config = require("./config.js"); // إذا كنت تحتاجه
 
+// إنشاء التطبيق
 const app = express();
 
 // Middleware
@@ -13,7 +13,6 @@ app.use(cors({
   allowedHeaders: ["Content-Type", "Authorization"]
 }));
 
-// زيادة حد الـ body parsing
 app.use(express.json({ 
   limit: '10mb',
   strict: true,
@@ -24,6 +23,23 @@ app.use(express.urlencoded({
   limit: '10mb' 
 }));
 
+// قراءة المتغيرات البيئية
+const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
+const SERPER_API_KEY = process.env.SERPER_API_KEY;
+
+// نقطة نهاية /chat
+app.post('/chat', (req, res) => {
+  const message = req.body.message || '';
+  res.json({
+    reply: `تم استلام رسالتك: "${message}" باستخدام GEMINI_KEY: ${GEMINI_API_KEY.slice(0,4)}...`
+  });
+});
+
+// تشغيل الخادم
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
+});
 // معالج أخطاء JSON parsing
 app.use((error, req, res, next) => {
   if (error instanceof SyntaxError && error.status === 400 && 'body' in error) {
