@@ -36,6 +36,8 @@ let currentUserMessage = null;
 let isGeneratingResponse = false;
 let isSearchMode = false;
 
+import config from "./config.js";
+
 // Initialize highlight.js with common languages
 hljs.configure({
     languages: ['javascript', 'python', 'bash', 'typescript', 'json', 'html', 'css']
@@ -44,61 +46,75 @@ hljs.configure({
 // Initialize highlight.js
 hljs.highlightAll();
 
-// API endpoint للخادم المحلي - مع معالجة أفضل للأخطاء
-const API_BASE_URL = '/api';
+const API_REQUEST_URL = `${config.API_BASE_URL}/models/${config.MODEL_NAME}:generateContent?key=${config.GEMINI_API_KEY}`;
 
-// دالة للتحقق من حالة الخادم
-const checkServerHealth = async () => {
-  try {
-    const response = await fetch(`${API_BASE_URL}/health`, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json'
-      }
-    });
+// دالة لتحميل الإعدادات المخصصة للبوت
+const loadCustomBotSettings = () => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const botId = urlParams.get('bot');
     
-    if (!response.ok) {
-      throw new Error(`Server health check failed: ${response.status}`);
+    if (botId) {
+        // تحميل الإعدادات المخصصة من localStorage
+        const savedSettings = localStorage.getItem('botCustomSettings');
+        if (savedSettings) {
+            try {
+                return JSON.parse(savedSettings);
+            } catch (error) {
+                console.error('خطأ في تحميل إعدادات البوت:', error);
+            }
+        }
     }
-    
-    const data = await response.json();
-    console.log("✅ Server is healthy:", data);
-    return true;
-  } catch (error) {
-    console.error("❌ Server health check failed:", error);
-    return false;
-  }
+    return null;
 };
 
-// دالة محسنة لمعالجة استجابات الخادم
-const handleServerResponse = async (response) => {
-  const contentType = response.headers.get('content-type');
-  
-  try {
-    // التحقق من أن الاستجابة هي JSON
-    if (!contentType || !contentType.includes('application/json')) {
-      const textResponse = await response.text();
-      console.error("Server returned non-JSON response:", textResponse);
-      throw new Error(`الخادم أرجع استجابة غير صحيحة. النوع: ${contentType || 'unknown'}`);
-    }
+// دالة إنشاء تعليمات النظام المخصصة
+const createCustomSystemInstructions = (settings) => {
+    const currentTime = new Date();
+    const currentHour = currentTime.getHours();
+    const currentMinutes = currentTime.getMinutes();
     
-    // محاولة تحليل JSON
-    const data = await response.json();
-    
-    if (!response.ok) {
-      throw new Error(data.error || `خطأ في الخادم: ${response.status}`);
+    let workingHoursStatus = "";
+    if (settings.startTime && settings.endTime) {
+        const [startHour, startMinute] = settings.startTime.split(':').map(Number);
+        const [endHour, endMinute] = settings.endTime.split(':').map(Number);
+        
+        const currentTimeInMinutes = currentHour * 60 + currentMinutes;
+        const startTimeInMinutes = startHour * 60 + startMinute;
+        const endTimeInMinutes = endHour * 60 + endMinute;
+        
+        if (currentTimeInMinutes >= startTimeInMinutes && currentTimeInMinutes <= endTimeInMinutes) {
+            workingHoursStatus = "نحن مفتوحون الآن";
+        } else {
+            workingHoursStatus = "نحن مغلقون الآن";
+        }
     }
-    
-    return data;
-  } catch (parseError) {
-    if (parseError.name === 'SyntaxError') {
-      // خطأ في تحليل JSON
-      const textFallback = await response.text().catch(() => 'لا يمكن قراءة الاستجابة');
-      console.error("JSON parsing failed. Response text:", textFallback);
-      throw new Error("الخادم أرجع استجابة تالفة. تحقق من الاتصال بالخادم");
-    }
-    throw parseError;
-  }
+
+    return `
+أنت مساعد ذكي مخصص لـ ${settings.workType}. 
+
+معلومات العمل:
+- نوع العمل: ${settings.workType}
+- ساعات العمل: من ${settings.startTime} إلى ${settings.endTime}
+- الحالة الحالية: ${workingHoursStatus}
+- أسلوب الرد: ${settings.responseStyle}
+
+التعليمات الأساسية:
+${settings.basicInstructions}
+
+🔹 قواعد التنسيق:
+1. اكتب العناوين بخط كبير وعريض (استخدم <h2> أو <h1> للعناوين الرئيسية) بدون **.  
+2. أبرز المصطلحات المهمة والنص المهم بالخط العريض.  
+3. استخدم النقاط (•) للقوائم.  
+4. أدرج <hr class="hr-dots"> بين الأقسام المختلفة لفصل المحتوى.  
+5. اجعل الفقرات موجزة وسهلة المسح.  
+6. ابدأ كل إجابة بعنوان واضح متعلق بالسؤال.  
+7. أضف اقتراحاً مفيداً أو سؤالاً في النهاية لتوجيه المستخدم.
+8. استخدم رموز تعبيرية لطيفة ومضحكة في أماكن غير متوقعة.
+
+🎯 هدفك هو جعل تجربة المستخدم سلسة وممتعة، مع تقديم قيمة حقيقية تتجاوز توقعاتهم.
+
+تذكر: التزم بأسلوب الرد المحدد (${settings.responseStyle}) في جميع ردودك.
+`;
 };
 
 // دالة لإعادة ضبط textarea إلى الحجم الطبيعي
@@ -106,12 +122,15 @@ const resetTextareaHeight = () => {
   if (textarea) {
     textarea.style.height = 'auto';
     textarea.style.overflowY = 'hidden';
+    // إعادة ضبط إلى الارتفاع الأساسي (3rem كما هو محدد في CSS)
     textarea.style.height = '3rem';
     
+    // إزالة أي padding إضافي من وضع البحث
     if (inputWrapper) {
       inputWrapper.classList.remove("search-active");
     }
     
+    // التأكد من إخفاء مؤشر البحث
     if (searchIndicator) {
       searchIndicator.classList.add("hide");
     }
@@ -124,6 +143,7 @@ const resetTextareaHeight = () => {
 const isImageGenerationRequest = (message) => {
   const lowerMessage = message.toLowerCase();
   
+  // كلمات مفتاحية تدل على طلب توليد صورة
   const imageKeywords = [
     // كلمات عربية
     'ارسم', 'اصنع صورة', 'انشئ صورة', 'ولد صورة', 'اعمل صورة',
@@ -139,24 +159,11 @@ const isImageGenerationRequest = (message) => {
   return imageKeywords.some(keyword => lowerMessage.includes(keyword));
 };
 
-// دالة توليد الصور باستخدام Pollinations API - مع معالجة أفضل للأخطاء
+// دالة توليد الصور باستخدام Pollinations API
 const generateImage = async (prompt) => {
   try {
-    console.log("🎨 Generating image description for:", prompt);
-    
-    // الحصول على وصف إنجليزي من الخادم
-    const response = await fetch(`${API_BASE_URL}/image-description`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ prompt }),
-    });
-
-    const data = await handleServerResponse(response);
-    const enhancedPrompt = data.description;
-    
-    console.log("✅ Image description generated:", enhancedPrompt);
+    // تحسين النص للحصول على صور أفضل
+    const enhancedPrompt = `${prompt}, high quality, detailed, professional, 4k resolution`;
     
     // استخدام Pollinations API لتوليد الصور
     const imageUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(enhancedPrompt)}?width=1024&height=1024&seed=${Math.floor(Math.random() * 1000000)}`;
@@ -164,24 +171,13 @@ const generateImage = async (prompt) => {
     // التحقق من أن الصورة تم تحميلها بنجاح
     return new Promise((resolve, reject) => {
       const img = new Image();
-      img.onload = () => {
-        console.log("✅ Image loaded successfully");
-        resolve(imageUrl);
-      };
-      img.onerror = () => {
-        console.error("❌ Image failed to load");
-        reject(new Error('فشل في تحميل الصورة من Pollinations'));
-      };
+      img.onload = () => resolve(imageUrl);
+      img.onerror = () => reject(new Error('فشل في تحميل الصورة'));
       img.src = imageUrl;
-      
-      // مهلة زمنية للتحميل
-      setTimeout(() => {
-        reject(new Error('انتهت مهلة تحميل الصورة'));
-      }, 30000);
     });
   } catch (error) {
-    console.error("❌ Image generation error:", error);
-    throw new Error(`فشل في توليد الصورة: ${error.message}`);
+    console.error("خطأ في توليد الصورة:", error);
+    throw new Error("حدث خطأ أثناء توليد الصورة");
   }
 };
 
@@ -248,11 +244,11 @@ const displayGeneratedImage = (imageUrl, messageElement, incomingMessageElement)
 };
 
 // معالجات أحداث نافذة عرض الصورة بملء الشاشة
-fullscreenClose?.addEventListener('click', () => {
+fullscreenClose.addEventListener('click', () => {
   imageFullscreenOverlay.classList.add('hide');
 });
 
-fullscreenDownload?.addEventListener('click', () => {
+fullscreenDownload.addEventListener('click', () => {
   const imageUrl = fullscreenImage.src;
   if (imageUrl) {
     downloadImage(imageUrl);
@@ -260,7 +256,7 @@ fullscreenDownload?.addEventListener('click', () => {
 });
 
 // إغلاق النافذة عند النقر خارج الصورة
-imageFullscreenOverlay?.addEventListener('click', (e) => {
+imageFullscreenOverlay.addEventListener('click', (e) => {
   if (e.target === imageFullscreenOverlay) {
     imageFullscreenOverlay.classList.add('hide');
   }
@@ -268,23 +264,72 @@ imageFullscreenOverlay?.addEventListener('click', (e) => {
 
 // دالة لتحديد ما إذا كانت الرسالة تحتاج للبحث في الإنترنت - محدودة جداً
 const needsInternetSearch = (message) => {
+  // إذا كان في وضع البحث، فنعم نحتاج للبحث
   if (isSearchMode) {
     return true;
   }
 
   const lowerMessage = message.toLowerCase();
   
+  // كلمات مفتاحية محدودة جداً للبحث التلقائي فقط
   const limitedSearchKeywords = [
+    // كلمات البحث المباشرة فقط
     'ابحث', 'بحث',
+    
+    // أسئلة الأسعار والتواريخ المباشرة فقط
     'كم سعر', 'كم التاريخ', 'كم تاريخ',
     'ما سعر', 'ما التاريخ', 'ما تاريخ'
   ];
   
-  return limitedSearchKeywords.some(keyword => {
-    return lowerMessage.startsWith(keyword) || 
-           lowerMessage.includes(' ' + keyword + ' ') || 
-           lowerMessage.includes(' ' + keyword);
+  // فحص دقيق جداً - يجب أن تبدأ الرسالة بإحدى هذه الكلمات أو تحتويها بوضوح
+  const hasLimitedSearchKeywords = limitedSearchKeywords.some(keyword => {
+    return lowerMessage.startsWith(keyword) || lowerMessage.includes(' ' + keyword + ' ') || lowerMessage.includes(' ' + keyword);
   });
+  
+  return hasLimitedSearchKeywords;
+};
+
+// دالة البحث في الإنترنت باستخدام Serper API
+const fetchSearchResults = async (query) => {
+  try {
+    const response = await fetch(config.SERPER_API_URL, {
+      method: "POST",
+      headers: {
+        "X-API-KEY": config.SERPER_API_KEY,
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        q: query,
+        gl: "ye" // اليمن كموقع افتراضي
+      })
+    });
+
+    if (!response.ok) {
+      throw new Error(`Search API error: ${response.status}`);
+    }
+
+    const data = await response.json();
+    
+    // استخراج أهم 3 نتائج
+    const results = data.organic?.slice(0, 3) || [];
+    
+    if (results.length === 0) {
+      return "لم يتم العثور على نتائج بحث حديثة.";
+    }
+
+    // تنسيق النتائج
+    let formattedResults = "نتائج البحث الحديثة:\n\n";
+    results.forEach((result, index) => {
+      formattedResults += `${index + 1}. العنوان: ${result.title}\n`;
+      formattedResults += `   الوصف: ${result.snippet}\n`;
+      formattedResults += `   المصدر: ${result.link}\n\n`;
+    });
+
+    return formattedResults;
+  } catch (error) {
+    console.error("خطأ في البحث:", error);
+    return "حدث خطأ أثناء البحث في الإنترنت.";
+  }
 };
 
 // وظيفة لاكتشاف النص العربي
@@ -333,10 +378,10 @@ const loadSavedChatHistory = () => {
 
     // Display the user's message
     const userMessageHtml = `
-      <div class="message__content">
-        <p class="message__text"></p>
-      </div>
-    `;
+            <div class="message__content">
+    <p class="message__text"></p>
+</div>
+        `;
 
     const outgoingMessageElement = createChatMessageElement(
       userMessageHtml,
@@ -383,7 +428,7 @@ const loadSavedChatHistory = () => {
       });
     } else {
       // Display the API response (النص العادي)
-      const responseText = conversation.apiResponse?.reply || 
+      const responseText =
         conversation.apiResponse?.candidates?.[0]?.content?.parts?.[0]?.text;
       
       // إضافة رد AI إلى conversationHistory
@@ -398,16 +443,16 @@ const loadSavedChatHistory = () => {
       const rawApiResponse = responseText; // Plain text version
 
       const responseHtml = `
-        <div class="message__content">
-          <p class="message__text"></p>
-          <div class="message__loading-indicator hide">
-              <div class="message__loading-bar"></div>
-          </div>
-        </div>
-        <span onClick="copyMessageToClipboard(this)" class="message__icon hide">
-            <i class='bx bx-copy-alt'></i>
-        </span>
-      `;
+            <div class="message__content">
+      <p class="message__text"></p>
+      <div class="message__loading-indicator hide">
+          <div class="message__loading-bar"></div>
+      </div>
+  </div>
+  <span onClick="copyMessageToClipboard(this)" class="message__icon hide">
+      <i class='bx bx-copy-alt'></i>
+  </span>
+          `;
 
       const incomingMessageElement = createChatMessageElement(
         responseHtml,
@@ -494,45 +539,89 @@ const showTypingEffect = (
   }, 15);
 };
 
-// Fetch API response from our server - مع معالجة محسنة للأخطاء
+// Fetch API response based on user input
 const requestApiResponse = async (incomingMessageElement) => {
-  const messageTextElement = incomingMessageElement.querySelector(".message__text");
+  const messageTextElement =
+    incomingMessageElement.querySelector(".message__text");
 
   try {
-    // التحقق من حالة الخادم أولاً
-    const serverHealthy = await checkServerHealth();
-    if (!serverHealthy) {
-      throw new Error("الخادم غير متاح حالياً. تحقق من أن الخادم يعمل بشكل صحيح");
-    }
-
     // تحديد ما إذا كانت الرسالة تحتاج للبحث
     const shouldSearch = needsInternetSearch(currentUserMessage);
     
-    console.log(shouldSearch ? "🔍 البحث مطلوب للرسالة:" : "💬 محادثة عادية، لا حاجة للبحث:", currentUserMessage);
+    let searchResults = "";
+    let finalMessage = currentUserMessage;
     
-    console.log("📤 Sending request to server...");
+    // إجراء البحث فقط إذا كانت الرسالة تحتاج لذلك
+    if (shouldSearch) {
+      console.log("🔍 البحث مطلوب للرسالة:", currentUserMessage);
+      searchResults = await fetchSearchResults(currentUserMessage);
+      
+      // تجهيز الرسالة مع نتائج البحث
+      finalMessage = `
+السؤال:
+${currentUserMessage}
+
+${searchResults}
+
+بناءً على هذه النتائج، أعطِ إجابة واضحة ومفيدة للمستخدم بدون عرض JSON أو روابط خام. استخدم المعلومات من نتائج البحث لتقديم إجابة دقيقة ومحدثة.
+`;
+    } else {
+      console.log("💬 محادثة عادية، لا حاجة للبحث:", currentUserMessage);
+    }
     
-    // إرسال الطلب إلى الخادم المحلي بدلاً من Gemini مباشرة
-    const response = await fetch(`${API_BASE_URL}/chat`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
+    // تحميل الإعدادات المخصصة للبوت
+    const customSettings = loadCustomBotSettings();
+    
+    // System instructions for the model
+    let systemInstructions;
+    if (customSettings) {
+      systemInstructions = createCustomSystemInstructions(customSettings);
+    } else {
+      systemInstructions = `
+You are an advanced AI assistant trained by ViboAi. Your mission is to respond to user inquiries in a friendly, professional, and clear manner.  
+
+🔹 Formatting Rules:
+1. Always write titles in a large, bold font (use <h2> or <h1> for major titles) no **.  
+2. Highlight key terms and important text in bold.  
+3. Use bullet points (•) for lists.  
+4. Insert <hr class="hr-dots"> between different sections to separate content.  
+5. Make paragraphs concise and easy to scan.  
+6. Start each answer with a clear title relevant to the question.  
+7. Add a helpful suggestion or question at the end to guide the user, for example, do you want me to write...
+8. When you search the Internet, do not say in your response, for example, (hello - welcome - etc...)
+9. Use cute and funny emojis in unexpected places.
+10. You can create images.
+
+🎯 Your goal is to make the user experience smooth and enjoyable, while providing real value that exceeds their expectations.
+`;
+    }
+
+    // إضافة رسالة المستخدم إلى conversationHistory
+    conversationHistory.push({
+      role: "user",
+      parts: [{ text: finalMessage }]
+    });
+
+    // تحضير المحتوى للإرسال إلى API (مع التعليمات النظام + كامل conversationHistory)
+    const apiContents = [
+      { role: "user", parts: [{ text: systemInstructions }] },
+      ...conversationHistory
+    ];
+
+    const response = await fetch(API_REQUEST_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        message: currentUserMessage,
-        conversationHistory: conversationHistory,
-        needsSearch: shouldSearch
+        contents: apiContents,
       }),
     });
 
-    const responseData = await handleServerResponse(response);
-    const responseText = responseData.reply;
+    const responseData = await response.json();
+    if (!response.ok) throw new Error(responseData.error.message);
 
-    if (!responseText) {
-      throw new Error("استجابة فارغة من الخادم");
-    }
-
-    console.log("✅ Received valid response from server");
+    const responseText =
+      responseData?.candidates?.[0]?.content?.parts?.[0]?.text;
+    if (!responseText) throw new Error("Invalid API response.");
 
     // إضافة رد AI إلى conversationHistory
     conversationHistory.push({
@@ -554,28 +643,16 @@ const requestApiResponse = async (incomingMessageElement) => {
     );
 
     // Save conversation in local storage
-    let savedConversations = JSON.parse(localStorage.getItem("saved-api-chats")) || [];
+    let savedConversations =
+      JSON.parse(localStorage.getItem("saved-api-chats")) || [];
     savedConversations.push({
       userMessage: currentUserMessage,
       apiResponse: responseData,
     });
     localStorage.setItem("saved-api-chats", JSON.stringify(savedConversations));
-
   } catch (error) {
-    console.error("❌ Request API response error:", error);
     isGeneratingResponse = false;
-    
-    let errorMessage = "حدث خطأ أثناء معالجة الطلب";
-    
-    if (error.message.includes("fetch")) {
-      errorMessage = "فشل في الاتصال بالخادم. تحقق من أن الخادم يعمل على المنفذ الصحيح";
-    } else if (error.message.includes("JSON")) {
-      errorMessage = "خطأ في تحليل استجابة الخادم. تحقق من إعدادات الخادم";
-    } else {
-      errorMessage = error.message;
-    }
-    
-    messageTextElement.innerText = errorMessage;
+    messageTextElement.innerText = error.message;
     messageTextElement.closest(".message").classList.add("message--error");
     
     // Scroll to bottom even on error
@@ -585,15 +662,18 @@ const requestApiResponse = async (incomingMessageElement) => {
   }
 };
 
-// دالة معالجة طلب توليد الصورة - مع معالجة أفضل للأخطاء
+// دالة معالجة طلب توليد الصورة
 const handleImageGeneration = async (incomingMessageElement) => {
   const messageTextElement = incomingMessageElement.querySelector(".message__text");
 
   try {
     console.log("🎨 توليد صورة للنص:", currentUserMessage);
     
-    // توليد الصورة (الذي يستخدم الخادم للحصول على الوصف الإنجليزي)
-    const imageUrl = await generateImage(currentUserMessage);
+    // إرسال الطلب إلى Gemini للحصول على وصف إنجليزي
+    const englishDescription = await getEnglishDescriptionFromGemini(currentUserMessage);
+    
+    // توليد الصورة باستخدام الوصف الإنجليزي
+    const imageUrl = await generateImage(englishDescription);
     
     // عرض الصورة المولدة
     displayGeneratedImage(imageUrl, messageTextElement, incomingMessageElement);
@@ -603,7 +683,13 @@ const handleImageGeneration = async (incomingMessageElement) => {
     savedConversations.push({
       userMessage: currentUserMessage,
       apiResponse: {
-        reply: `تم توليد صورة بناءً على طلبك: "${currentUserMessage}"`
+        candidates: [{
+          content: {
+            parts: [{
+              text: `تم توليد صورة بناءً على طلبك: "${currentUserMessage}"`
+            }]
+          }
+        }]
       },
       isImage: true,
       imageUrl: imageUrl
@@ -611,13 +697,57 @@ const handleImageGeneration = async (incomingMessageElement) => {
     localStorage.setItem("saved-api-chats", JSON.stringify(savedConversations));
     
   } catch (error) {
-    console.error("❌ Image generation error:", error);
     isGeneratingResponse = false;
     messageTextElement.innerText = `خطأ في توليد الصورة: ${error.message}`;
     messageTextElement.closest(".message").classList.add("message--error");
     scrollToBottom();
   } finally {
     incomingMessageElement.classList.remove("message--loading");
+  }
+};
+
+// دالة للحصول على وصف إنجليزي من Gemini
+const getEnglishDescriptionFromGemini = async (userPrompt) => {
+  try {
+    const systemInstructions = `
+You are an expert image description generator. Your task is to convert any user request (in any language) into a detailed, professional English description suitable for AI image generation.
+
+Rules:
+1. Always respond ONLY with the English description, no explanations or additional text
+2. Make the description detailed and specific for better image quality
+3. Include artistic style, lighting, composition details when appropriate
+4. Keep it under 200 characters for optimal results
+5. Focus on visual elements that can be rendered in an image
+
+Example:
+User: "ارسم قطة جميلة"
+Response: "Beautiful fluffy cat with bright eyes, sitting gracefully, soft lighting, detailed fur texture, photorealistic style"
+`;
+
+    const response = await fetch(API_REQUEST_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        contents: [
+          { role: "user", parts: [{ text: systemInstructions }] },
+          { role: "user", parts: [{ text: userPrompt }] }
+        ],
+      }),
+    });
+
+    const responseData = await response.json();
+    if (!response.ok) throw new Error(responseData.error.message);
+
+    const englishDescription = responseData?.candidates?.[0]?.content?.parts?.[0]?.text;
+    if (!englishDescription) throw new Error("فشل في الحصول على وصف من Gemini");
+
+    console.log("📝 الوصف الإنجليزي من Gemini:", englishDescription);
+    return englishDescription.trim();
+    
+  } catch (error) {
+    console.error("خطأ في الحصول على وصف من Gemini:", error);
+    // في حالة الفشل، استخدم النص الأصلي
+    return userPrompt;
   }
 };
 
@@ -751,10 +881,10 @@ const handleOutgoingMessage = () => {
   isGeneratingResponse = true;
 
   const outgoingMessageHtml = `
-    <div class="message__content">
-      <p class="message__text"></p>
-    </div>
-  `;
+        <div class="message__content">
+    <p class="message__text"></p>
+</div>
+    `;
 
   const outgoingMessageElement = createChatMessageElement(
     outgoingMessageHtml,
@@ -784,76 +914,71 @@ const handleOutgoingMessage = () => {
 };
 
 // Handle image button click - تفعيل حاوية الخيارات
-imageButton?.addEventListener("click", (e) => {
+imageButton.addEventListener("click", (e) => {
   e.preventDefault();
-  searchOptionsContainer?.classList.remove("hide");
+  searchOptionsContainer.classList.remove("hide");
 });
 
 // Handle notification close button
-closeNotificationButton?.addEventListener("click", () => {
-  imageServiceNotification?.classList.add("hide");
+closeNotificationButton.addEventListener("click", () => {
+  imageServiceNotification.classList.add("hide");
 });
 
 // معالجات أزرار الخيارات
-cameraBtn?.addEventListener("click", () => {
-  searchOptionsContainer?.classList.add("hide");
+cameraBtn.addEventListener("click", () => {
+  searchOptionsContainer.classList.add("hide");
   // يمكن إضافة وظيفة الكاميرا لاحقاً
-  imageServiceNotification?.classList.remove("hide");
+  imageServiceNotification.classList.remove("hide");
 });
 
-galleryBtn?.addEventListener("click", () => {
-  searchOptionsContainer?.classList.add("hide");
+galleryBtn.addEventListener("click", () => {
+  searchOptionsContainer.classList.add("hide");
   // يمكن إضافة وظيفة المعرض لاحقاً
-  imageServiceNotification?.classList.remove("hide");
+  imageServiceNotification.classList.remove("hide");
 });
 
-filesBtn?.addEventListener("click", () => {
-  searchOptionsContainer?.classList.add("hide");
+filesBtn.addEventListener("click", () => {
+  searchOptionsContainer.classList.add("hide");
   // يمكن إضافة وظيفة الملفات لاحقاً
-  imageServiceNotification?.classList.remove("hide");
+  imageServiceNotification.classList.remove("hide");
 });
 
 // معالج زر البحث في الإنترنت
-internetSearchBtn?.addEventListener("click", () => {
-  searchOptionsContainer?.classList.add("hide");
-  searchIndicator?.classList.remove("hide");
-  inputWrapper?.classList.add("search-active");
+internetSearchBtn.addEventListener("click", () => {
+  searchOptionsContainer.classList.add("hide");
+  searchIndicator.classList.remove("hide");
+  inputWrapper.classList.add("search-active");
   isSearchMode = true;
   
   // التركيز على حقل الإدخال
   const inputField = document.getElementById("userInput");
-  inputField?.focus();
+  inputField.focus();
 });
 
 // معالج زر إغلاق مؤشر البحث - مع إعادة ضبط textarea
-searchCloseBtn?.addEventListener("click", () => {
+searchCloseBtn.addEventListener("click", () => {
   resetTextareaHeight();
 });
 
 // إغلاق حاوية الخيارات عند النقر خارجها
 document.addEventListener("click", (e) => {
-  if (searchOptionsContainer && imageButton) {
-    if (!searchOptionsContainer.contains(e.target) && !imageButton.contains(e.target)) {
-      searchOptionsContainer.classList.add("hide");
-    }
+  if (!searchOptionsContainer.contains(e.target) && !imageButton.contains(e.target)) {
+    searchOptionsContainer.classList.add("hide");
   }
 });
 
 // Toggle between light and dark themes
-themeToggleButton?.addEventListener("click", () => {
+themeToggleButton.addEventListener("click", () => {
   const isLightTheme = document.body.classList.toggle("light_mode");
   localStorage.setItem("themeColor", isLightTheme ? "light_mode" : "dark_mode");
 
   // Update icon based on theme
   const newIconClass = isLightTheme ? "bx bx-moon" : "bx bx-sun";
-  const iconElement = themeToggleButton.querySelector("i");
-  if (iconElement) {
-    iconElement.className = newIconClass;
-  }
+  themeToggleButton.querySelector("i").className = newIconClass;
 });
 
 // Clear all chat history
-clearChatButton?.addEventListener("click", () => {
+clearChatButton.addEventListener("click", () => {
   if (confirm("هل أنت متأكد أنك تريد حذف كل سجل الدردشة؟")) {
     localStorage.removeItem("saved-api-chats");
     conversationHistory = []; // إعادة تعيين conversationHistory
@@ -880,7 +1005,7 @@ suggestionItems.forEach((suggestion) => {
 });
 
 // Prevent default from submission and handle outgoing message
-messageForm?.addEventListener("submit", (e) => {
+messageForm.addEventListener("submit", (e) => {
   e.preventDefault();
   handleOutgoingMessage();
 });
@@ -905,11 +1030,6 @@ if (textarea) {
   });
 }
 
-// التحقق من حالة الخادم عند تحميل الصفحة
-document.addEventListener('DOMContentLoaded', async () => {
-  console.log("🔄 Page loaded, checking server status...");
-  await checkServerHealth();
-});
-
 // Load saved chat history on page load
 loadSavedChatHistory();
+
