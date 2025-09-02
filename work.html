@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>إعداد البوت</title>
+    <!-- Boxicons CSS -->
+    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
     <style>
         * {
             margin: 0;
@@ -13,46 +15,59 @@
 
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            padding: 20px;
+            background: #fff;
+            min-height: 100%;
+            wight: 10%;
+            wight: 0;
             direction: rtl;
+            zoom: 60%;
+            transform-origin: top right;
         }
 
-        .container {
-            max-width: 800px;
-            margin: 0 auto;
-            background: rgba(255, 255, 255, 0.95);
-            border-radius: 20px;
-            padding: 40px;
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
-            backdrop-filter: blur(10px);
+        html, body {
+          overflow-x: hidden;
         }
 
-        .header {
-            position: relative;
+        .top-bar {
+            background: white;
+            padding: 20px 40px;
+            border-bottom: 1.5px solid #F3F3F3;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
             margin-bottom: 40px;
         }
 
+        .main-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #333;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
         .publish-btn {
-            position: absolute;
-            top: 0;
-            left: 0;
-            background: linear-gradient(45deg, #4CAF50, #45a049);
+            background: #000;
             color: white;
             border: none;
-            padding: 12px 24px;
-            border-radius: 25px;
+            padding: 5px 50px;
+            border-radius: 26px;
             cursor: pointer;
             font-size: 16px;
-            font-weight: bold;
+            font-weight: 600;
             transition: all 0.3s ease;
-            box-shadow: 0 4px 15px rgba(76, 175, 80, 0.3);
+            position: relative;
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
 
         .publish-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(76, 175, 80, 0.4);
+            transform: translateY(-1px);
         }
 
         .publish-btn:active {
@@ -61,16 +76,17 @@
 
         .popup {
             position: absolute;
-            top: 60px;
+            top: 100%;
             left: 0;
             background: white;
-            border-radius: 15px;
+            border-radius: 12px;
             padding: 20px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
             min-width: 300px;
             display: none;
             z-index: 1000;
-            border: 2px solid #4CAF50;
+            border: 1px solid #000;
+            margin-top: 8px;
+            margin-left: 120px;
         }
 
         .popup.show {
@@ -92,11 +108,11 @@
         .link-container {
             display: flex;
             align-items: center;
-            background: #f5f5f5;
+            background: #f8f9fa;
             border-radius: 8px;
             padding: 10px;
             margin-bottom: 15px;
-            border: 1px solid #ddd;
+            border: 1px solid #e0e0e0;
         }
 
         .link-text {
@@ -120,6 +136,9 @@
             margin-right: 10px;
             font-size: 12px;
             transition: background 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 5px;
         }
 
         .copy-btn:hover {
@@ -127,143 +146,185 @@
         }
 
         .share-btn {
-            background: #FF9800;
-            color: white;
-            border: none;
-            padding: 12px 24px;
-            border-radius: 8px;
-            cursor: pointer;
-            font-size: 16px;
-            font-weight: bold;
-            width: 100%;
-            transition: all 0.3s ease;
-        }
+    background: transparent; /* الخلفية شفافة */
+    color: #444; /* نفس لون الحواف */
+    border: 1px solid #0F0F0F; /* إطار بارز */
+    padding: 10px 24px;
+    border-radius: 15px;
+    cursor: pointer;
+    font-size: 16px;
+    font-weight: bold;
+    width: 100%;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
 
-        .share-btn:hover {
-            background: #F57C00;
-            transform: translateY(-1px);
-        }
+/* تأثير عند التمرير */
+.share-btn:hover {
+    background: #17baa9; /* يضيف خلفية */
+    color: white; /* يغير لون النص */
+}
 
-        .title {
-            text-align: center;
-            color: #333;
-            font-size: 2.5em;
-            margin-bottom: 30px;
-            font-weight: bold;
-            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+        
+
+        .main-content {
+            padding: 40px;
+            max-width: 1400px;
+            margin: 0 auto;
         }
 
         .form-section {
-            margin-bottom: 30px;
+            margin-bottom: 32px;
+        }
+
+        .form-group {
+            position: relative;
+            margin-bottom: 6px;
         }
 
         .form-label {
-            display: block;
-            font-size: 18px;
-            font-weight: bold;
-            color: #333;
-            margin-bottom: 10px;
+            position: absolute;
+            top: -8px;
+            right: 16px;
+            background: white;
+            padding: 0 8px;
+            font-size: 14px;
+            font-weight: 600;
+            color: #666;
+            z-index: 10;
+            display: flex;
+            align-items: center;
+            gap: 5px;
         }
 
         .form-input {
             width: 100%;
-            padding: 15px;
-            border: 2px solid #ddd;
-            border-radius: 15px;
+            padding: 16px;
+            border: 1.5px solid #e0e0e0;
+            border-radius: 26px;
             font-size: 16px;
             outline: none;
-            transition: border-color 0.3s ease;
+            transition: all 0.3s ease;
             font-family: inherit;
             direction: rtl;
+            background: white;
+            margin-bottom: 20px;
         }
 
         .form-input:focus {
-            border-color: #4CAF50;
-            box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.1);
+            border-color: #3E68FF;
+        }
+
+        .form-input:focus + .form-label {
+            color: #3E68FF;
         }
 
         .textarea-input {
             min-height: 120px;
             resize: vertical;
+            font-family: inherit;
         }
 
         .time-container {
             display: flex;
-            gap: 15px;
-            margin-bottom: 30px;
+            gap: 10px;
+            margin-bottom: 32px;
+            justify-content: center;
         }
 
         .time-section {
             flex: 1;
         }
 
+        .time-group {
+            position: relative;
+        }
+
         .time-btn {
+            flex: 1;
             width: 100%;
-            padding: 15px;
-            background: linear-gradient(45deg, #2196F3, #1976D2);
-            color: white;
-            border: none;
-            border-radius: 15px;
+            padding: 16px;
+            background: white;
+            color: #333;
+            border: 1.5px solid #e0e0e0;
+            border-radius: 20px;
             font-size: 16px;
-            font-weight: bold;
+            font-weight: 500;
             cursor: pointer;
             transition: all 0.3s ease;
+            text-align: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
         }
 
         .time-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(33, 150, 243, 0.4);
+            border-color: #fff;
+            background: #f8fffe;
         }
 
-        .time-display {
-            margin-top: 10px;
-            padding: 10px;
-            background: #f5f5f5;
-            border-radius: 10px;
-            text-align: center;
-            font-weight: bold;
-            color: #333;
+        .time-btn:focus {
+            border-color: #000;
+            outline: none;
+        }
+
+        .time-btn.has-value {
+            background: #fff;
+            border-color: #e0e0e0;
+            color: #000;
+            font-weight: 600;
         }
 
         .style-container {
             display: flex;
             flex-wrap: wrap;
             gap: 10px;
-            margin-top: 10px;
+            margin-top: 16px;
         }
 
         .style-btn {
-            padding: 10px 20px;
-            background: #f5f5f5;
-            border: 2px solid #ddd;
-            border-radius: 25px;
+            margin-top: 20px;
+            padding: 10px 40px;
+            background: white;
+            border: 1.5px solid #e0e0e0;
+            border-radius: 20px;
             cursor: pointer;
             transition: all 0.3s ease;
             font-size: 14px;
-            font-weight: bold;
+            font-weight: 600;
+            margin-bottom: -10px;
         }
 
         .style-btn:hover {
-            background: #e0e0e0;
+            border-color: #000;
+            background: #f8fffe;
         }
 
         .style-btn.active {
-            background: #4CAF50;
+            background: #000;
             color: white;
-            border-color: #4CAF50;
+            border-color: #000;
+            transform: translateY(-1px);
+            margin-top: 20px;
         }
 
         .notification {
+            margin-top: 20px;
             position: fixed;
             top: 20px;
             right: 20px;
             background: #4CAF50;
             color: white;
-            padding: 15px 20px;
-            border-radius: 10px;
+            padding: 16px 24px;
+            border-radius: 12px;
             display: none;
             z-index: 1001;
             animation: slideInRight 0.3s ease;
+            box-shadow: 0 6px 20px rgba(76, 175, 80, 0.3);
         }
 
         @keyframes slideInRight {
@@ -283,90 +344,244 @@
 
         .error {
             background: #f44336 !important;
+            box-shadow: 0 6px 20px rgba(244, 67, 54, 0.3) !important;
         }
 
+        .hidden-time-input {
+            margin-top: 20px;
+            position: absolute;
+            opacity: 0;
+            pointer-events: none;
+            left: -9999px;
+        }
+
+        /* New styles for separator and mobile preview */
+        .separator {
+            width: 100%;
+            height: 1.5px;
+            background: #e0e0e0;
+            margin: 60px 0 40px 0;
+        }
+
+        .preview-section {
+            text-align: center;
+            padding: 0 40px 60px 40px;
+        }
+
+        .preview-title {
+            font-size: 24px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .phone-mockup {
+            display: inline-block;
+            position: relative;
+            background: #000;
+            border-radius: 30px;
+            padding: 8px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            margin: 0 auto;
+        }
+
+        .phone-screen {
+            width: 320px;
+            height: 640px;
+            background: #fff;
+            border-radius: 22px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .phone-notch {
+            position: absolute;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 120px;
+            height: 25px;
+            background: #000;
+            border-radius: 0 0 15px 15px;
+            z-index: 10;
+        }
+
+        .phone-iframe {
+    width: 100%; /* عشان تعوض التصغير */
+    height: 100%;
+    border: none;
+    border-radius: 22px;
+}
+
         @media (max-width: 768px) {
-            .container {
+            .top-bar {
+                padding: 16px 20px;
+            }
+            
+            .main-content {
                 padding: 20px;
-                margin: 10px;
             }
             
             .popup {
-                left: -50px;
-                min-width: 250px;
-            }
-            
-            .title {
-                font-size: 2em;
+                left: -120px;
+                min-width: 280px;
             }
 
             .time-container {
-                flex-direction: column;
+                gap: 16px;
             }
 
             .style-container {
                 justify-content: center;
             }
+
+            .preview-section {
+                padding: 0 20px 40px 20px;
+            }
+
+            .phone-screen {
+                width: 280px;
+                height: 560px;
+            }
+
+            .phone-notch {
+                width: 100px;
+                height: 20px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .phone-screen {
+                width: 350px;
+                height: 700px;
+            }
+
+            .phone-notch {
+                width: 80px;
+                height: 18px;
+            }
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="header">
-            <button class="publish-btn" id="publishBtn">نشر البوت</button>
+    <div class="top-bar">
+        <h1 class="main-title">
+            إعداد البوت
+        </h1>
+        <div style="position: relative;">
+            <button class="publish-btn" id="publishBtn">
+                <i class='bx bx-cloud-upload'></i>
+                نشر البوت
+            </button>
             <div class="popup" id="popup">
                 <div class="link-container">
                     <input type="text" class="link-text" id="linkText" readonly>
-                    <button class="copy-btn" id="copyBtn">نسخ</button>
+                    <button class="copy-btn" id="copyBtn">
+                        <i class='bx bx-copy'></i>
+                        نسخ
+                    </button>
                 </div>
-                <button class="share-btn" id="shareBtn">نشر والانتقال</button>
+                <button class="share-btn" id="shareBtn">
+                    <i class='bx bx-share-alt'></i>
+                    نشر والانتقال
+                </button>
             </div>
         </div>
+    </div>
 
-        <h1 class="title">إعداد البوت المخصص</h1>
-        
+    <div class="main-content">
         <form id="botConfigForm">
             <div class="form-section">
-                <label class="form-label">نوع العمل</label>
-                <input type="text" class="form-input" id="workType" placeholder="مثال: شركة، صيدلية، عيادة، مطعم..." required>
+                <div class="form-group">
+                    <input type="text" class="form-input" id="workType" placeholder="مثال: شركة، صيدلية، عيادة، مطعم..." required>
+                    <label class="form-label">
+                        <i class='bx bx-briefcase'></i>
+                        نوع العمل
+                    </label>
+                </div>
             </div>
 
             <div class="time-container">
                 <div class="time-section">
-                    <label class="form-label">بداية الدوام</label>
-                    <button type="button" class="time-btn" id="startTimeBtn">تحديد وقت البداية</button>
-                    <div class="time-display" id="startTimeDisplay">لم يتم التحديد</div>
-                    <input type="hidden" id="startTime">
+                    <div class="time-group">
+                        <button type="button" class="time-btn" id="startTimeBtn">
+                            <i class='bx bx-time-five'></i>
+                            <span id="startTimeDisplay">تحديد وقت البداية</span>
+                        </button>
+                        <label class="form-label">
+                            <i class='bx bx-sun'></i>
+                            بداية الدوام
+                        </label>
+                        <input type="time" class="hidden-time-input" id="startTimeInput" value="09:00">
+                        <input type="hidden" id="startTime">
+                    </div>
                 </div>
                 
                 <div class="time-section">
-                    <label class="form-label">نهاية الدوام</label>
-                    <button type="button" class="time-btn" id="endTimeBtn">تحديد وقت النهاية</button>
-                    <div class="time-display" id="endTimeDisplay">لم يتم التحديد</div>
-                    <input type="hidden" id="endTime">
+                    <div class="time-group">
+                        <button type="button" class="time-btn" id="endTimeBtn">
+                            <i class='bx bx-time-five'></i>
+                            <span id="endTimeDisplay">تحديد وقت النهاية</span>
+                        </button>
+                        <label class="form-label">
+                            <i class='bx bx-moon'></i>
+                            نهاية الدوام
+                        </label>
+                        <input type="time" class="hidden-time-input" id="endTimeInput" value="18:00">
+                        <input type="hidden" id="endTime">
+                    </div>
                 </div>
             </div>
 
             <div class="form-section">
-                <label class="form-label">أسلوب الرد</label>
-                <div class="style-container">
-                    <button type="button" class="style-btn" data-style="تسويقي">تسويقي</button>
-                    <button type="button" class="style-btn" data-style="ودي">ودي</button>
-                    <button type="button" class="style-btn" data-style="مرح">مرح</button>
-                    <button type="button" class="style-btn" data-style="رسمي">رسمي</button>
-                    <button type="button" class="style-btn" data-style="طبي">طبي</button>
-                    <button type="button" class="style-btn" data-style="تقني">تقني</button>
+                <div class="form-group">
+                    <input type="text" class="form-input" id="responseStyle" placeholder="مثال: ودي، رسمي، مرح، تسويقي..." required>
+                    <label class="form-label">
+                        <i class='bx bx-message-rounded-dots'></i>
+                        أسلوب الرد
+                    </label>
                 </div>
-                <input type="hidden" id="responseStyle">
             </div>
 
             <div class="form-section">
-                <label class="form-label">التعليمات الأساسية</label>
-                <textarea class="form-input textarea-input" id="basicInstructions" 
-                    placeholder="مثال: أنت مساعد في عيادة أسنان، مهمتك هي الرد على استفسارات المرضى حول المواعيد والخدمات المتوفرة..." 
-                    required></textarea>
+                <div class="form-group">
+                    <textarea class="form-input textarea-input" id="basicInstructions" 
+                        placeholder="مثال: أنت مساعد في عيادة أسنان، مهمتك هي الرد على استفسارات المرضى حول المواعيد والخدمات المتوفرة...(ثم أدخل بعض المعلومات هنا مثل الخدمات والاسعار وكل ما تحتاج ليعمل الــChatBot باعلى كفائة) " 
+                        required></textarea>
+                    <label class="form-label">
+                        <i class='bx bx-edit'></i>
+                        التعليمات الأساسية
+                    </label>
+                </div>
             </div>
         </form>
+    </div>
+
+    <!-- Separator line -->
+    <div class="separator"></div>
+
+    <!-- Preview section -->
+    <div class="preview-section">
+        <h2 class="preview-title">
+            <i class='bx bx-mobile-alt'></i>
+            مثال كيف سيكون النموذج
+        </h2>
+        
+        <div class="phone-mockup">
+            <div class="phone-screen">
+                <div class="phone-notch"></div>
+                <iframe 
+                    class="phone-iframe" 
+                    src="https://madsof035-prog.github.io/ViboAi/index.html?bot=1801rregsmf0adf9n&config=eyJ3b3JrVHlwZSI6Iti02LHZg9ipIiwic3RhcnRUaW1lIjoiMDc6MDAiLCJlbmRUaW1lIjoiMTk6MDAiLCJyZXNwb25zZVN0eWxlIjoi2KrYs9mI2YrZgtmKIiwiYmFzaWNJbnN0cnVjdGlvbnMiOiLYp9mG2Kog2YXYs9in2LnYryDYtNiu2LXZiiDZgdmKINi02LHZg9ipINi52YXYsSDZgtin2LHZiNmCINmE2YTYp9iv2YjZitipIiwiY3JlYXRlZEF0IjoiMjAyNS0wOC0zMVQyMjo1Mjo0Ny42MTZaIn0="
+                    title="Bot Preview"
+                    loading="lazy">
+                </iframe>
+            </div>
+        </div>
     </div>
 
     <div class="notification" id="notification">
@@ -388,11 +603,12 @@
         const endTimeBtn = document.getElementById('endTimeBtn');
         const startTimeDisplay = document.getElementById('startTimeDisplay');
         const endTimeDisplay = document.getElementById('endTimeDisplay');
-        const startTimeInput = document.getElementById('startTime');
-        const endTimeInput = document.getElementById('endTime');
+        const startTimeInput = document.getElementById('startTimeInput');
+        const endTimeInput = document.getElementById('endTimeInput');
+        const startTimeHidden = document.getElementById('startTime');
+        const endTimeHidden = document.getElementById('endTime');
         const responseStyleInput = document.getElementById('responseStyle');
         const basicInstructionsInput = document.getElementById('basicInstructions');
-        const styleBtns = document.querySelectorAll('.style-btn');
 
         // دالة لإظهار الإشعار
         const showNotification = (message, isError = false) => {
@@ -403,53 +619,47 @@
             }, 3000);
         };
 
-        // دالة لتحديد الوقت
-        const selectTime = (isStartTime) => {
-            const input = document.createElement('input');
-            input.type = 'time';
-            input.style.position = 'absolute';
-            input.style.left = '-9999px';
-            document.body.appendChild(input);
-            
-            input.addEventListener('change', () => {
-                const time = input.value;
-                if (time) {
-                    const [hours, minutes] = time.split(':');
-                    const formattedTime = `${hours}:${minutes}`;
-                    const displayTime = formatTimeDisplay(hours, minutes);
-                    
-                    if (isStartTime) {
-                        startTimeInput.value = formattedTime;
-                        startTimeDisplay.textContent = displayTime;
-                    } else {
-                        endTimeInput.value = formattedTime;
-                        endTimeDisplay.textContent = displayTime;
-                    }
-                }
-                document.body.removeChild(input);
-            });
-            
-            input.click();
-        };
-
         // دالة لتنسيق عرض الوقت
         const formatTimeDisplay = (hours, minutes) => {
             const period = hours >= 12 ? 'مساءً' : 'صباحاً';
-            const displayHours = hours > 12 ? hours - 12 : (hours === '00' ? 12 : hours);
+            const displayHours = hours > 12 ? hours - 12 : (hours === '00' ? 12 : parseInt(hours));
             return `${displayHours}:${minutes} ${period}`;
         };
 
-        // أحداث أزرار الوقت
-        startTimeBtn.addEventListener('click', () => selectTime(true));
-        endTimeBtn.addEventListener('click', () => selectTime(false));
+        // إعداد أزرار الوقت
+        startTimeBtn.addEventListener('click', () => {
+            startTimeInput.click();
+        });
 
-        // أحداث أزرار الأسلوب
-        styleBtns.forEach(btn => {
-            btn.addEventListener('click', () => {
-                styleBtns.forEach(b => b.classList.remove('active'));
-                btn.classList.add('active');
-                responseStyleInput.value = btn.getAttribute('data-style');
-            });
+        endTimeBtn.addEventListener('click', () => {
+            endTimeInput.click();
+        });
+
+        // أحداث تغيير الوقت
+        startTimeInput.addEventListener('change', () => {
+            const time = startTimeInput.value;
+            if (time) {
+                const [hours, minutes] = time.split(':');
+                const formattedTime = `${hours}:${minutes}`;
+                const displayTime = formatTimeDisplay(parseInt(hours), minutes);
+                
+                startTimeHidden.value = formattedTime;
+                startTimeDisplay.textContent = displayTime;
+                startTimeBtn.classList.add('has-value');
+            }
+        });
+
+        endTimeInput.addEventListener('change', () => {
+            const time = endTimeInput.value;
+            if (time) {
+                const [hours, minutes] = time.split(':');
+                const formattedTime = `${hours}:${minutes}`;
+                const displayTime = formatTimeDisplay(parseInt(hours), minutes);
+                
+                endTimeHidden.value = formattedTime;
+                endTimeDisplay.textContent = displayTime;
+                endTimeBtn.classList.add('has-value');
+            }
         });
 
         // دالة توليد ID فريد
@@ -460,9 +670,9 @@
         // دالة التحقق من صحة النموذج
         const validateForm = () => {
             const workType = workTypeInput.value.trim();
-            const startTime = startTimeInput.value;
-            const endTime = endTimeInput.value;
-            const responseStyle = responseStyleInput.value;
+            const startTime = startTimeHidden.value;
+            const endTime = endTimeHidden.value;
+            const responseStyle = responseStyleInput.value.trim();
             const basicInstructions = basicInstructionsInput.value.trim();
 
             if (!workType) {
@@ -481,7 +691,7 @@
             }
 
             if (!responseStyle) {
-                showNotification('يرجى اختيار أسلوب الرد', true);
+                showNotification('يرجى إدخال أسلوب الرد', true);
                 return false;
             }
 
@@ -497,9 +707,9 @@
         const saveBotSettings = () => {
             const settings = {
                 workType: workTypeInput.value.trim(),
-                startTime: startTimeInput.value,
-                endTime: endTimeInput.value,
-                responseStyle: responseStyleInput.value,
+                startTime: startTimeHidden.value,
+                endTime: endTimeHidden.value,
+                responseStyle: responseStyleInput.value.trim(),
                 basicInstructions: basicInstructionsInput.value.trim(),
                 createdAt: new Date().toISOString()
             };
@@ -527,29 +737,24 @@
                     const settings = JSON.parse(saved);
                     
                     workTypeInput.value = settings.workType || '';
-                    startTimeInput.value = settings.startTime || '';
-                    endTimeInput.value = settings.endTime || '';
+                    startTimeHidden.value = settings.startTime || '';
+                    endTimeHidden.value = settings.endTime || '';
                     responseStyleInput.value = settings.responseStyle || '';
                     basicInstructionsInput.value = settings.basicInstructions || '';
 
                     // تحديث عرض الأوقات
                     if (settings.startTime) {
                         const [hours, minutes] = settings.startTime.split(':');
-                        startTimeDisplay.textContent = formatTimeDisplay(hours, minutes);
+                        startTimeDisplay.textContent = formatTimeDisplay(parseInt(hours), minutes);
+                        startTimeBtn.classList.add('has-value');
+                        startTimeInput.value = settings.startTime;
                     }
                     
                     if (settings.endTime) {
                         const [hours, minutes] = settings.endTime.split(':');
-                        endTimeDisplay.textContent = formatTimeDisplay(hours, minutes);
-                    }
-
-                    // تحديد الأسلوب المحفوظ
-                    if (settings.responseStyle) {
-                        const activeBtn = document.querySelector(`[data-style="${settings.responseStyle}"]`);
-                        if (activeBtn) {
-                            styleBtns.forEach(b => b.classList.remove('active'));
-                            activeBtn.classList.add('active');
-                        }
+                        endTimeDisplay.textContent = formatTimeDisplay(parseInt(hours), minutes);
+                        endTimeBtn.classList.add('has-value');
+                        endTimeInput.value = settings.endTime;
                     }
                 } catch (error) {
                     console.error('خطأ في تحميل الإعدادات:', error);
@@ -624,3 +829,12 @@
     </script>
 </body>
 </html>
+
+
+
+
+
+
+
+
+
